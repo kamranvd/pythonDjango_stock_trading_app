@@ -1,0 +1,65 @@
+Python Django Installation - Step 02
+
+
+#!/bin/bash
+
+# install MySQL Client for Python: 
+> pip install mysqlclient
+
+Error Code 00
+
+pip install --upgrade pip
+
+# to fix issue needed to run
+brew install mysql-client
+
+# due to my macOS version I encountered multiple issues attempting to install
+# mysql-client through Homebrew. Instead of listing all the errors and failed
+# attempts, I'm going to show what did finally work
+
+> brew cleanup
+> brew doctor
+> brew install mariadb-connector-c
+> deactivate
+> brew install openssl@3
+> brew link openssl@3 --force 
+> echo 'export PATH="/usr/local/opt/openssl@3/bin:$PATH"' >> ~/.zshrc
+> source ~/.zshrc
+> pyenv uninstall 3.11.1
+> rm -rf "$(pyenv root)"/cache/* 
+> pyenv install 3.11.1 
+> pyenv global 3.11.1 
+> pyenv rehash
+> cd /[path]/stock_trader_project
+> rm -rf venv
+> python3 -m venv venv
+> source venv/bin/activate
+> export LDFLAGS="-L/usr/local/opt/mariadb-connector-c/lib"
+> export CPPFLAGS="-I/usr/local/opt/mariadb-connector-c/include"
+> export PKG_CONFIG_PATH="/usr/local/opt/mariadb-connector-c/lib/pkgconfig"
+> pip install mysqlclient
+
+# download an older version of mysql community version
+# mysql-8.0.30-macos12-x86_64.dmg
+
+# log into mysql
+mysql -u my_username -p
+
+# create the database in MySQL
+> CREATE DATABASE stock_trader_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+# verify the database has been created
+SHOW DATABASES;
+
+# configure settings.py:
+# stock_trader/settings.py
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'stock_trader_db',
+        'USER': 'my_username', 
+        'PASSWORD': 'my_username_mysql_password',
+        'HOST': '127.0.0.1', 
+        'PORT': '3306',
+    }
+}
