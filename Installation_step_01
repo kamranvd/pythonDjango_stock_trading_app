@@ -1,0 +1,59 @@
+Python Django Installation - Step 01
+
+#!/bin/bash
+
+# create project folder
+> mkdir stock_trader_project
+> cd stock_trader_project
+
+# create virtual environment
+> python -m venv venv
+
+# activate environment
+> source venv/bin/activate
+
+# install django
+> pip install Django
+
+# create django project
+> django-admin startproject stock_trader .
+
+# create django app
+> python manage.py startapp trading
+
+# Python settings
+# add trading to INSTALLED_APPS in stock_trader/settings.py
+
+# stock_trader/settings.py
+> cd stock_trader
+> cat settings.py
+> emacs -nw settings.py
+# making changes below
+INSTALLED_APPS = [
+    # ... other apps
+    'trading',
+]
+# save and exit
+ctrl-x ctrl-s
+ctrl-x ctrl-c
+# to view changes
+> less settings.py | more
+> cd ..
+
+# run migrations
+> python manage.py migrate
+
+# create superuser
+> python manage.py createsuperuser
+
+# verify setup
+> python manage.py runserver
+
+      Django version 5.2.1, using settings 'stock_trader.settings'
+      Starting development server at http://127.0.0.1:8000/
+
+# verify software versions:
+> python --version
+Python 3.11.1
+> python -m django --version
+5.2.1
