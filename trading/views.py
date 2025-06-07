@@ -111,6 +111,10 @@ def transaction_history_view(request):
     user_profile = get_object_or_404(UserProfile, user=request.user)
     transactions = Transaction.objects.filter(user_profile=user_profile).order_by('-transaction_date')
 
+    for transaction in transactions:
+        transaction.total_amount = transaction.quantity * transaction.price
+
+
     context = {
         'transactions': transactions,
     }

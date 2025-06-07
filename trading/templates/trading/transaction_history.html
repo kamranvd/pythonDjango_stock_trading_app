@@ -39,7 +39,7 @@
                     <td>{{ transaction.stock.symbol }}</td>
                     <td>{{ transaction.quantity }}</td>
                     <td>${{ transaction.price }}</td>
-                    <td>${{ transaction.quantity|mul:transaction.price }}</td>
+                    <td>${{ transaction.total_amount|floatformat:2 }}</td>
                 </tr>
                 {% empty %}
                 <tr>
