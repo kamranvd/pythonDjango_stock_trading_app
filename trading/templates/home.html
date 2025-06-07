@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Trader - Home</title>
+    <style>
+        body { font-family: sans-serif; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px; background-color: #f0f0f0; }
+        .portfolio-section, .stock-section { margin: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .buy-sell-form { margin-top: 15px; }
+        .buy-sell-form input, .buy-sell-form button { margin-right: 5px; padding: 5px; }
+        .message { margin-top: 10px; padding: 10px; background-color: #e0ffe0; border: 1px solid #a0c0a0; display: none; }
+        .error { background-color: #ffe0e0; border: 1px solid #c0a0a0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Stock Trader</h1>
+        <div>
+            Welcome, {{ request.user.username }} |
+            <a href="{% url 'logout' %}">Logout</a> |
+            <a href="{% url 'reset_account' %}">Reset Account</a> |
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="stock-section">
+            <h2>Market View</h2>
+            <input type="text" id="search-input" placeholder="Search for stock...">
+            <button onclick="searchStock()">Search</button>
+            <div id="selected-stock-details">
+                <h3>Selected Stock: <span id="selected-stock-name"></span> (<span id="selected-stock-symbol"></span>)</h3>
+                <p>Current Price: $<span id="selected-stock-price">--.--</span></p>
+                <div id="stock-chart" style="height: 300px; width: 100%; border: 1px solid #eee;">
+                    <p>Stock chart placeholder</p>
+                </div>
+                <div class="buy-sell-form">
+                    <input type="number" id="buy-quantity" placeholder="Quantity" min="1">
+                    <button onclick="executeTrade('buy')">Buy</button>
+                    <input type="number" id="sell-quantity" placeholder="Quantity" min="1">
+                    <button onclick="executeTrade('sell')">Sell</button>
+                    <p id="trade-message" class="message"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="portfolio-section">
+            <h2>Your Portfolio</h2>
+            <p>Cash Balance: $<span id="cash-balance">{{ user_profile.cash_balance }}</span></p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Stock</th>
+                        <th>Quantity</th>
+                        <th>Value</th>
+                        <th>Buy/Sell (Quick Actions)</th>
+                    </tr>
+                </thead>
+                <tbody id="portfolio-table-body">
+                    {% for holding in portfolio_holdings %}
+                    <tr id="holding-row-{{ holding.stock.symbol }}">
+                        <td>{{ holding.stock.symbol }} - {{ holding.stock.name }}</td>
+                        <td class="holding-quantity">{{ holding.quantity }}</td>
+                        <td class="holding-value">$--.--</td> {# This will be updated by JS #}
+                        <td>
+                            </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">You currently have no stock holdings.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let availableStocks = [
+            {% for stock in stocks %}
+                { symbol: "{{ stock.symbol }}", name: "{{ stock.name }}" },
+            {% endfor %}
+        ];
+        let selectedStock = null; // Object for the currently selected stock
+
+
+        function fetchCurrentPrice(symbol) {
+            setTimeout(() => {
+                const price = (Math.random() * 1000 + 50).toFixed(2); // Random price for demo
+                document.getElementById('selected-stock-price').textContent = price;
+                selectedStock.currentPrice = parseFloat(price); // Store current price
+            }, 500);
+        }
+
+        function displayMessage(message, isError) {
+            const msgDiv = document.getElementById('trade-message');
+            msgDiv.textContent = message;
+            msgDiv.className = `message ${isError ? 'error' : ''}`;
+            msgDiv.style.display = 'block';
+            setTimeout(() => msgDiv.style.display = 'none', 5000); // Hide after 5 seconds
+        }
+
+        // Initial stock load (e.g., BHP from wireframe)
+        window.onload = function() {
+            // You could default to a specific stock or load from user's last view
+            if (availableStocks.length > 0) {
+                document.getElementById('search-input').value = availableStocks[0].symbol; // Set initial search to first stock
+                searchStock(); // Automatically search and display it
+            }
+        };
+    </script>
+</body>
+</html>
