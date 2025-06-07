@@ -86,7 +86,7 @@
                 { symbol: "{{ stock.symbol }}", name: "{{ stock.name }}" },
             {% endfor %}
         ];
-        let selectedStock = null; // Object for the currently selected stock
+        let selectedStock = null; 
 
         function searchStock() {
             const searchInput = document.getElementById('search-input').value.toUpperCase();
@@ -96,10 +96,10 @@
                 selectedStock = matchedStock;
                 document.getElementById('selected-stock-name').textContent = matchedStock.name;
                 document.getElementById('selected-stock-symbol').textContent = matchedStock.symbol;
-                // Placeholder for price - this would come from an API call
+
                 document.getElementById('selected-stock-price').textContent = 'Loading...';
                 fetchCurrentPrice(matchedStock.symbol);
-                // Load historical data and render chart
+
                 loadHistoricalData(matchedStock.symbol);
             } else {
                 document.getElementById('selected-stock-name').textContent = 'N/A';
@@ -112,26 +112,21 @@
         }
 
         function fetchCurrentPrice(symbol) {
-            // In a real app, this would be an AJAX call to your Django backend,
-            // which then calls the external stock API.
-            // For now, let's simulate:
+
             setTimeout(() => {
-                const price = (Math.random() * 1000 + 50).toFixed(2); // Random price for demo
+                const price = (Math.random() * 1000 + 50).toFixed(2); 
                 document.getElementById('selected-stock-price').textContent = price;
                 selectedStock.currentPrice = parseFloat(price); // Store current price
             }, 500);
         }
 
         function loadHistoricalData(symbol) {
-            // This would be an AJAX call to a Django endpoint that
-            // fetches historical data and returns it.
-            // For charting, you'd use a JS charting library like Chart.js or Plotly.js.
+
             const chartDiv = document.getElementById('stock-chart');
             chartDiv.innerHTML = `<p>Loading historical data for ${symbol}...</p>`;
             setTimeout(() => {
                 chartDiv.innerHTML = `<p>Chart for ${symbol} goes here!</p>`;
-                // Example with Chart.js:
-                // new Chart(ctx, { type: 'line', data: { labels: [...], datasets: [...] }});
+
             }, 1000);
         }
 
@@ -166,7 +161,7 @@
                 if (data.success) {
                     displayMessage(data.message, false);
                     // Update cash balance and portfolio holdings dynamically
-                    location.reload(); // Simple reload for now, but use AJAX updates later
+                    location.reload(); 
                 } else {
                     displayMessage(data.message, true);
                 }
@@ -185,14 +180,14 @@
             setTimeout(() => msgDiv.style.display = 'none', 5000); // Hide after 5 seconds
         }
 
-        // Function to get CSRF token (required for Django POST requests)
+
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
                 const cookies = document.cookie.split(';');
                 for (let i = 0; i < cookies.length; i++) {
                     const cookie = cookies[i].trim();
-                    // Does this cookie string begin with the name we want?
+
                     if (cookie.substring(0, name.length + 1) === (name + '=')) {
                         cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                         break;
@@ -202,12 +197,12 @@
             return cookieValue;
         }
 
-        // Initial stock load (e.g., BHP from wireframe)
+
         window.onload = function() {
-            // You could default to a specific stock or load from user's last view
+
             if (availableStocks.length > 0) {
-                document.getElementById('search-input').value = availableStocks[0].symbol; // Set initial search to first stock
-                searchStock(); // Automatically search and display it
+                document.getElementById('search-input').value = availableStocks[0].symbol; 
+                searchStock(); 
             }
         };
     </script>

@@ -10,8 +10,7 @@ from decimal import Decimal
 @login_required
 def home_view(request):
     user_profile, created = UserProfile.objects.get_or_create(user=request.user)
-    # For simplicity, we'll pass some initial data.
-    # This will be refined significantly.
+
     stocks = Stock.objects.all()
     portfolio_holdings = Holding.objects.filter(user_profile=user_profile)
 
@@ -29,7 +28,7 @@ def buy_stock(request):
     user_profile = get_object_or_404(UserProfile, user=request.user)
     stock_symbol = request.POST.get('symbol')
     quantity = int(request.POST.get('quantity'))
-    current_price = Decimal(request.POST.get('price')) # Get from frontend for now, but later get from API
+    current_price = Decimal(request.POST.get('price')) 
 
     stock = get_object_or_404(Stock, symbol=stock_symbol)
 
@@ -68,7 +67,7 @@ def sell_stock(request):
     user_profile = get_object_or_404(UserProfile, user=request.user)
     stock_symbol = request.POST.get('symbol')
     quantity = int(request.POST.get('quantity'))
-    current_price = Decimal(request.POST.get('price')) # Get from frontend for now, but later get from API
+    current_price = Decimal(request.POST.get('price')) 
 
     stock = get_object_or_404(Stock, symbol=stock_symbol)
     holding = get_object_or_404(Holding, user_profile=user_profile, stock=stock)
@@ -85,7 +84,7 @@ def sell_stock(request):
 
             holding.quantity -= quantity
             if holding.quantity == 0:
-                holding.delete() # Remove holding if quantity is zero
+                holding.delete() 
             else:
                 holding.save()
 
@@ -105,24 +104,19 @@ def sell_stock(request):
 def reset_account(request):
     user_profile = get_object_or_404(UserProfile, user=request.user)
     user_profile.reset_account()
-    return redirect('home') # Redirect to home or a confirmation page
+    return redirect('home') 
 
 @login_required
 def transaction_history_view(request):
     user_profile = get_object_or_404(UserProfile, user=request.user)
     transactions = Transaction.objects.filter(user_profile=user_profile).order_by('-transaction_date')
 
-    # Logic for portfolio value fluctuation chart will go here
-    # This is more complex and will involve calculating portfolio value daily
-    # based on historical prices and holdings.
-
     context = {
         'transactions': transactions,
-        # 'portfolio_value_data': ... (for chart)
     }
     return render(request, 'trading/transaction_history.html', context)
 
 
 def logout_view(request):
     auth_logout(request)
-    return redirect('login') # Redirect to login page
+    return redirect('login')

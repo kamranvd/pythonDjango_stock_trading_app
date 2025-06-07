@@ -56,13 +56,9 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // This is complex logic that needs:
-        // 1. A Django endpoint to calculate daily portfolio value based on historical prices and user's holdings.
-        // 2. Fetching that data via AJAX here.
-        // 3. Rendering it using Chart.js.
-        // For now, this is a placeholder.
+
         const ctx = document.getElementById('portfolio-value-chart').getContext('2d');
-        // Example dummy data
+
         const labels = ['2023-01-01', '2023-01-02', '2023-01-03', '2023-01-04', '2023-01-05'];
         const data = [10000, 10150, 9900, 10300, 10200];
         new Chart(ctx, {
@@ -82,7 +78,7 @@
                 maintainAspectRatio: false,
                 scales: {
                     x: {
-                        type: 'time', // Requires Chart.js adapter for date parsing
+                        type: 'time', 
                         time: {
                             unit: 'day'
                         },
@@ -101,8 +97,7 @@
                 }
             }
         });
-        // You'll need to load a date adapter for Chart.js if using type: 'time'
-        // <script src="https://cdn.jsdelivr.net/npm/luxon@3.x/dist/luxon.min.js"></script>
+    </script>
         // <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.x/dist/chartjs-adapter-luxon.min.js"></script>
     </script>
 </body>
