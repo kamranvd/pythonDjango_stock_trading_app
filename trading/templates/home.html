@@ -24,6 +24,7 @@
             Welcome, {{ request.user.username }} |
             <a href="{% url 'logout' %}">Logout</a> |
             <a href="{% url 'reset_account' %}">Reset Account</a> |
+            <a href="{% url 'transaction_history' %}">Transaction History</a>
         </div>
     </div>
 
@@ -87,13 +88,93 @@
         ];
         let selectedStock = null; // Object for the currently selected stock
 
+        function searchStock() {
+            const searchInput = document.getElementById('search-input').value.toUpperCase();
+            const matchedStock = availableStocks.find(stock => stock.symbol === searchInput || stock.name.toUpperCase().includes(searchInput));
+
+            if (matchedStock) {
+                selectedStock = matchedStock;
+                document.getElementById('selected-stock-name').textContent = matchedStock.name;
+                document.getElementById('selected-stock-symbol').textContent = matchedStock.symbol;
+                // Placeholder for price - this would come from an API call
+                document.getElementById('selected-stock-price').textContent = 'Loading...';
+                fetchCurrentPrice(matchedStock.symbol);
+                // Load historical data and render chart
+                loadHistoricalData(matchedStock.symbol);
+            } else {
+                document.getElementById('selected-stock-name').textContent = 'N/A';
+                document.getElementById('selected-stock-symbol').textContent = 'N/A';
+                document.getElementById('selected-stock-price').textContent = '--.--';
+                document.getElementById('trade-message').textContent = 'Stock not found.';
+                document.getElementById('trade-message').className = 'message error';
+                document.getElementById('trade-message').style.display = 'block';
+            }
+        }
 
         function fetchCurrentPrice(symbol) {
+            // In a real app, this would be an AJAX call to your Django backend,
+            // which then calls the external stock API.
+            // For now, let's simulate:
             setTimeout(() => {
                 const price = (Math.random() * 1000 + 50).toFixed(2); // Random price for demo
                 document.getElementById('selected-stock-price').textContent = price;
                 selectedStock.currentPrice = parseFloat(price); // Store current price
             }, 500);
+        }
+
+        function loadHistoricalData(symbol) {
+            // This would be an AJAX call to a Django endpoint that
+            // fetches historical data and returns it.
+            // For charting, you'd use a JS charting library like Chart.js or Plotly.js.
+            const chartDiv = document.getElementById('stock-chart');
+            chartDiv.innerHTML = `<p>Loading historical data for ${symbol}...</p>`;
+            setTimeout(() => {
+                chartDiv.innerHTML = `<p>Chart for ${symbol} goes here!</p>`;
+                // Example with Chart.js:
+                // new Chart(ctx, { type: 'line', data: { labels: [...], datasets: [...] }});
+            }, 1000);
+        }
+
+        function executeTrade(tradeType) {
+            if (!selectedStock || !selectedStock.currentPrice) {
+                displayMessage('Please select a stock first and wait for its price to load.', true);
+                return;
+            }
+
+            const quantityInput = document.getElementById(`${tradeType}-quantity`);
+            const quantity = parseInt(quantityInput.value);
+
+            if (isNaN(quantity) || quantity <= 0) {
+                displayMessage('Please enter a valid quantity.', true);
+                return;
+            }
+
+            const data = new FormData();
+            data.append('symbol', selectedStock.symbol);
+            data.append('quantity', quantity);
+            data.append('price', selectedStock.currentPrice);
+
+            fetch(`/${tradeType}/`, { // e.g., /buy/ or /sell/
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken') // Function to get CSRF token
+                },
+                body: data
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayMessage(data.message, false);
+                    // Update cash balance and portfolio holdings dynamically
+                    location.reload(); // Simple reload for now, but use AJAX updates later
+                } else {
+                    displayMessage(data.message, true);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                displayMessage('An unexpected error occurred.', true);
+            });
         }
 
         function displayMessage(message, isError) {
@@ -102,6 +183,23 @@
             msgDiv.className = `message ${isError ? 'error' : ''}`;
             msgDiv.style.display = 'block';
             setTimeout(() => msgDiv.style.display = 'none', 5000); // Hide after 5 seconds
+        }
+
+        // Function to get CSRF token (required for Django POST requests)
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
         }
 
         // Initial stock load (e.g., BHP from wireframe)
