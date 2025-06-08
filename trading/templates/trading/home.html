@@ -130,15 +130,82 @@
             }, 500);
         }
 
+        let myStockChart; // To hold the Chart.js instance
+
         function loadHistoricalData(symbol) {
-
-            const chartDiv = document.getElementById('stock-chart');
-            chartDiv.innerHTML = `<p>Loading historical data for ${symbol}...</p>`;
-            setTimeout(() => {
-                chartDiv.innerHTML = `<p>Chart for ${symbol} goes here!</p>`;
-
-            }, 1000);
-        }
+        fetch(`/api/stock_details/${symbol}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    displayMessage(data.error, true);
+                    return;
+                }
+                document.getElementById('selected-stock-price').textContent = data.current_price.toFixed(2);
+                selectedStock.currentPrice = data.current_price;
+                const ctx = document.getElementById('stockChartCanvas').getContext('2d');
+                // Destroy existing chart if it exists
+                if (myStockChart) {
+                    myStockChart.destroy();
+                }
+                myStockChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.historical_data.labels, // Dates
+                        datasets: [{
+                            label: `${symbol} Close Price`,
+                            data: data.historical_data.close_prices,
+                            borderColor: 'rgb(75, 192, 192)',
+                            tension: 0.1,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'day',
+                                    tooltipFormat: 'MMM D, YYYY'
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Date'
+                                }
+                            },
+                            y: {
+                                beginAtZero: false,
+                                title: {
+                                    display: true,
+                                    text: 'Price ($)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching stock details:', error);
+                displayMessage('Failed to load stock data.', true);
+            });
+    }
 
         function executeTrade(tradeType) {
             if (!selectedStock || !selectedStock.currentPrice) {
@@ -169,17 +236,48 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    displayMessage(data.message, false);
-                    // Update cash balance and portfolio holdings dynamically
-                    location.reload(); 
+                displayMessage(data.message, false);
+                document.getElementById('cash-balance').textContent = data.new_cash_balance.toFixed(2);
+                // Dynamically update portfolio table
+                // This is more complex, but a simple version could re-fetch portfolio holdings
+                // or manipulate the DOM based on the trade. For now, a reload is fine,
+                // but consider AJAX for a smoother UX.
+                // For a quick fix, let's just update if the stock exists in the portfolio view
+                const holdingRow = document.getElementById(`holding-row-${selectedStock.symbol}`);
+                if (holdingRow) {
+                    const currentQty = parseInt(holdingRow.querySelector('.holding-quantity').textContent);
+                    if (tradeType === 'buy') {
+                        holdingRow.querySelector('.holding-quantity').textContent = currentQty + quantity;
+                    } else if (tradeType === 'sell') {
+                        const newQty = currentQty - quantity;
+                        if (newQty <= 0) {
+                             holdingRow.remove(); // Remove row if sold all
+                        } else {
+                            holdingRow.querySelector('.holding-quantity').textContent = newQty;
+                        }
+                    }
+                } else if (tradeType === 'buy') {
+                    // If buying a new stock, add a new row to the portfolio table
+                    const portfolioTableBody = document.getElementById('portfolio-table-body');
+                    const newRow = `
+                        <tr id="holding-row-${selectedStock.symbol}">
+                            <td>${selectedStock.symbol} - ${selectedStock.name}</td>
+                            <td class="holding-quantity">${quantity}</td>
+                            <td class="holding-value">$--.--</td>
+                            <td></td>
+                        </tr>
+                    `;
+                    portfolioTableBody.insertAdjacentHTML('beforeend', newRow);
+                }
                 } else {
-                    displayMessage(data.message, true);
+                displayMessage(data.message, true);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 displayMessage('An unexpected error occurred.', true);
             });
+
         }
 
         function displayMessage(message, isError) {
