@@ -37,7 +37,13 @@
                 <h3>Selected Stock: <span id="selected-stock-name"></span> (<span id="selected-stock-symbol"></span>)</h3>
                 <p>Current Price: $<span id="selected-stock-price">--.--</span></p>
                 <div id="stock-chart" style="height: 300px; width: 100%; border: 1px solid #eee;">
-                    <p>Stock chart placeholder</p>
+                    <div id="selected-stock-details">
+                        <h3>Selected Stock: <span id="selected-stock-name"></span> (<span id="selected-stock-symbol"></span>)</h3>
+                        <p>Current Price: $<span id="selected-stock-price">--.--</span></p>
+                        <div style="height: 300px; width: 100%;">
+                            <canvas id="stockChartCanvas"></canvas>
+                        </div>
+                    </div>
                 </div>
                 <div class="buy-sell-form">
                     <input type="number" id="buy-quantity" placeholder="Quantity" min="1">
@@ -79,6 +85,10 @@
             </table>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.x/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.x/dist/chartjs-adapter-luxon.min.js"></script>
 
     <script>
         let availableStocks = [
