@@ -6,6 +6,8 @@ from django.db import transaction as db_transaction
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from decimal import Decimal
+from .api_utils import fetch_daily_historical_data, fetch_current_price
+import json
 
 @login_required
 def home_view(request):
@@ -120,6 +122,47 @@ def transaction_history_view(request):
     }
     return render(request, 'trading/transaction_history.html', context)
 
+@login_required
+def get_stock_details(request, symbol):
+    """API endpoint to get current price and historical data for a stock."""
+    stock = get_object_or_404(Stock, symbol=symbol.upper())
+    current_price = fetch_current_price(stock.symbol)
+    if current_price is None:
+        return JsonResponse({'error': 'Could not fetch current price.'}, status=500)
+
+    latest_db_date = HistoricalPrice.objects.filter(stock=stock).order_by('-date').first()
+    today = datetime.now().date()
+    if not latest_db_date or (today - latest_db_date.date).days > 0: # Fetch if no data or data is old
+        historical_api_data = fetch_daily_historical_data(stock.symbol)
+        if historical_api_data:
+            # Save new historical data to DB
+            for data_point in historical_api_data:
+                # Use update_or_create to avoid duplicates on re-fetching
+                HistoricalPrice.objects.update_or_create(
+                    stock=stock,
+                    date=data_point['date'],
+                    defaults={
+                        'open_price': data_point['open_price'],
+                        'high_price': data_point['high_price'],
+                        'low_price': data_point['low_price'],
+                        'close_price': data_point['close_price'],
+                        'volume': data_point['volume'],
+                    }
+                )
+            print(f"Fetched and saved new historical data for {stock.symbol}")
+        else:
+            print(f"Failed to fetch historical data for {stock.symbol}")
+    historical_prices = HistoricalPrice.objects.filter(stock=stock).order_by('date')
+    chart_data = {
+        'labels': [p.date.strftime('%Y-%m-%d') for p in historical_prices],
+        'close_prices': [float(p.close_price) for p in historical_prices],
+    }
+    return JsonResponse({
+        'symbol': stock.symbol,
+        'name': stock.name,
+        'current_price': float(current_price),
+        'historical_data': chart_data
+    })
 
 def logout_view(request):
     auth_logout(request)
