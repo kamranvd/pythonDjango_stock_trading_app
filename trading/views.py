@@ -32,7 +32,7 @@ def buy_stock(request):
     quantity = int(request.POST.get('quantity'))
     stock = get_object_or_404(Stock, symbol=stock_symbol)
     current_price = fetch_current_price(stock.symbol) # **Get actual current price**
-    
+
     if current_price is None:
         return JsonResponse({'success': False, 'message': 'Could not fetch current price for trading.'}, status=500)
     total_cost = quantity * current_price
@@ -65,37 +65,33 @@ def buy_stock(request):
 @require_POST
 def sell_stock(request):
     user_profile = get_object_or_404(UserProfile, user=request.user)
-    stock_symbol = request.POST.get('symbol')
+    stock_symbol = request.POST.get('symbol').upper()
     quantity = int(request.POST.get('quantity'))
-    current_price = Decimal(request.POST.get('price')) 
-
     stock = get_object_or_404(Stock, symbol=stock_symbol)
     holding = get_object_or_404(Holding, user_profile=user_profile, stock=stock)
-
+    current_price = fetch_current_price(stock.symbol) # **Get actual current price**
+    if current_price is None:
+        return JsonResponse({'success': False, 'message': 'Could not fetch current price for trading.'}, status=500)
     if holding.quantity < quantity:
         return JsonResponse({'success': False, 'message': 'Insufficient shares to sell.'}, status=400)
-
     total_revenue = quantity * current_price
-
     try:
         with db_transaction.atomic():
             user_profile.cash_balance += total_revenue
             user_profile.save()
-
             holding.quantity -= quantity
             if holding.quantity == 0:
-                holding.delete() 
+                holding.delete()
             else:
                 holding.save()
-
             Transaction.objects.create(
                 user_profile=user_profile,
                 stock=stock,
                 transaction_type='SELL',
                 quantity=quantity,
-                price=current_price
+                price=current_price # Record the actual price
             )
-        return JsonResponse({'success': True, 'message': 'Stock sold successfully.'})
+        return JsonResponse({'success': True, 'message': 'Stock sold successfully.', 'new_cash_balance': float(user_profile.cash_balance)})
     except Exception as e:
         return JsonResponse({'success': False, 'message': f'Transaction failed: {str(e)}'}, status=500)
 
