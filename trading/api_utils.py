@@ -37,7 +37,7 @@ def fetch_daily_historical_data(symbol):
 def fetch_current_price(symbol):
     """Fetches the latest available daily close price from Alpha Vantage."""
     api_key = settings.ALPHA_VANTAGE_API_KEY
-    url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol}&outputsize=compact&apikey={api_key}"
+    url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&outputsize=compact&apikey={api_key}"
     response = requests.get(url)
     data = response.json()
 
