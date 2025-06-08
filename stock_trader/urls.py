@@ -13,5 +13,5 @@ urlpatterns = [
     path('sell/', sell_stock, name='sell_stock'),
     path('reset_account/', reset_account, name='reset_account'),
     path('history/', transaction_history_view, name='transaction_history'),
-    # Add other URLs as you create views
+    path('api/stock_details/<str:symbol>/', get_stock_details, name='get_stock_details'),
 ]
