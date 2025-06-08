@@ -28,22 +28,20 @@ def home_view(request):
 @require_POST
 def buy_stock(request):
     user_profile = get_object_or_404(UserProfile, user=request.user)
-    stock_symbol = request.POST.get('symbol')
+    stock_symbol = request.POST.get('symbol').upper()
     quantity = int(request.POST.get('quantity'))
-    current_price = Decimal(request.POST.get('price')) 
-
     stock = get_object_or_404(Stock, symbol=stock_symbol)
-
+    current_price = fetch_current_price(stock.symbol) # **Get actual current price**
+    
+    if current_price is None:
+        return JsonResponse({'success': False, 'message': 'Could not fetch current price for trading.'}, status=500)
     total_cost = quantity * current_price
-
     if user_profile.cash_balance < total_cost:
         return JsonResponse({'success': False, 'message': 'Insufficient funds.'}, status=400)
-
     try:
         with db_transaction.atomic():
             user_profile.cash_balance -= total_cost
             user_profile.save()
-
             holding, created = Holding.objects.get_or_create(
                 user_profile=user_profile,
                 stock=stock,
@@ -51,17 +49,17 @@ def buy_stock(request):
             )
             holding.quantity += quantity
             holding.save()
-
             Transaction.objects.create(
                 user_profile=user_profile,
                 stock=stock,
                 transaction_type='BUY',
                 quantity=quantity,
-                price=current_price
+                price=current_price # Record the actual price
             )
-        return JsonResponse({'success': True, 'message': 'Stock bought successfully.'})
+        return JsonResponse({'success': True, 'message': 'Stock bought successfully.', 'new_cash_balance': float(user_profile.cash_balance)})
     except Exception as e:
         return JsonResponse({'success': False, 'message': f'Transaction failed: {str(e)}'}, status=500)
+
 
 @login_required
 @require_POST
