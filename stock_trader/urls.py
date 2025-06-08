@@ -2,7 +2,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views # Import Django's auth views
-from trading.views import home_view, logout_view, buy_stock, sell_stock, reset_account, transaction_history_view
+from trading.views import home_view, logout_view, buy_stock, sell_stock, reset_account, transaction_history_view, get_stock_details
 
 urlpatterns = [
     path('admin/', admin.site.urls),
