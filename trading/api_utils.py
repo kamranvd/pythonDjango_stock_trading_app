@@ -7,7 +7,7 @@ from decimal import Decimal
 def fetch_daily_historical_data(symbol):
     """Fetches daily historical data from Alpha Vantage."""
     api_key = settings.ALPHA_VANTAGE_API_KEY
-    url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol}&outputsize=full&apikey={api_key}"
+    url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&outputsize=full&apikey={api_key}"
     response = requests.get(url)
     data = response.json()
 
