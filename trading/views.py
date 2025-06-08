@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from decimal import Decimal
 from .api_utils import fetch_daily_historical_data, fetch_current_price
+from datetime import datetime
 import json
 
 @login_required
