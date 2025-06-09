@@ -14,20 +14,31 @@ def fetch_daily_historical_data(symbol):
     if "Time Series (Daily)" not in data:
         print(f"Error fetching data for {symbol}: {data.get('Note') or data.get('Error Message')}")
         return None
+    
+    time_series_key = None
+    for key in data.keys():
+        if "Time Series" in key and "(Daily)" in key: # Make sure this is robust
+            time_series_key = key
+            break
+
+    if not time_series_key or time_series_key not in data:
+        print(f"DEBUG: 'Time Series (Daily)' key not found in response for {symbol}. Full API Response: {data}")
+        return None
 
     historical_data = []
-    for date_str, values in data["Time Series (Daily)"].items():
+    for date_str, values in data[time_series_key].items():
         try:
             historical_data.append({
                 'date': datetime.strptime(date_str, '%Y-%m-%d').date(),
                 'open_price': Decimal(values['1. open']),
                 'high_price': Decimal(values['2. high']),
                 'low_price': Decimal(values['3. low']),
-                'close_price': Decimal(values['4. close']), 
-                'volume': int(values['6. volume']),
+                'close_price': Decimal(values['4. close']),
+                'volume': int(values['5. volume']),
             })
-        except KeyError:
-            print(f"Missing data for {symbol} on {date_str}. Skipping.")
+        except KeyError as e:
+            # This means a *specific sub-key* like '1. open' was missing for a date
+            print(f"Missing expected key '{e}' for {symbol} on {date_str}. Skipping this data point.")
             continue
         except Exception as e:
             print(f"Error processing data for {symbol} on {date_str}: {e}")
@@ -45,7 +56,16 @@ def fetch_current_price(symbol):
         print(f"Error fetching current price for {symbol}: {data.get('Note') or data.get('Error Message')}")
         return None
 
-    # Get the latest date's data
-    latest_date = sorted(data["Time Series (Daily)"].keys(), reverse=True)[0]
-    return Decimal(data["Time Series (Daily)"][latest_date]['4. close'])
+    time_series_key = None
+    for key in data.keys():
+        if "Time Series" in key and "(Daily)" in key: # Make sure this is robust
+            time_series_key = key
+            break
+
+    if not time_series_key or time_series_key not in data:
+        print(f"DEBUG: 'Time Series (Daily)' key not found in response for {symbol}. Full API Response: {data}")
+        return None
+
+    latest_date = sorted(data[time_series_key].keys(), reverse=True)[0]
+    return Decimal(data[time_series_key][latest_date]['4. close'])
 

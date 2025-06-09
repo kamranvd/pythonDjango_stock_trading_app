@@ -38,8 +38,6 @@
                 <p>Current Price: $<span id="selected-stock-price">--.--</span></p>
                 <div id="stock-chart" style="height: 300px; width: 100%; border: 1px solid #eee;">
                     <div id="selected-stock-details">
-                        <h3>Selected Stock: <span id="selected-stock-name"></span> (<span id="selected-stock-symbol"></span>)</h3>
-                        <p>Current Price: $<span id="selected-stock-price">--.--</span></p>
                         <div style="height: 300px; width: 100%;">
                             <canvas id="stockChartCanvas"></canvas>
                         </div>
@@ -94,6 +92,7 @@
         let availableStocks = [
             {% for stock in stocks %}
                 { symbol: "{{ stock.symbol }}", name: "{{ stock.name }}" },
+                {% if not forloop.last %},{% endif %}
             {% endfor %}
         ];
         let selectedStock = null; 
@@ -238,11 +237,6 @@
                 if (data.success) {
                 displayMessage(data.message, false);
                 document.getElementById('cash-balance').textContent = data.new_cash_balance.toFixed(2);
-                // Dynamically update portfolio table
-                // This is more complex, but a simple version could re-fetch portfolio holdings
-                // or manipulate the DOM based on the trade. For now, a reload is fine,
-                // but consider AJAX for a smoother UX.
-                // For a quick fix, let's just update if the stock exists in the portfolio view
                 const holdingRow = document.getElementById(`holding-row-${selectedStock.symbol}`);
                 if (holdingRow) {
                     const currentQty = parseInt(holdingRow.querySelector('.holding-quantity').textContent);
@@ -257,7 +251,6 @@
                         }
                     }
                 } else if (tradeType === 'buy') {
-                    // If buying a new stock, add a new row to the portfolio table
                     const portfolioTableBody = document.getElementById('portfolio-table-body');
                     const newRow = `
                         <tr id="holding-row-${selectedStock.symbol}">
