@@ -1,7 +1,6 @@
 # pythonDjango_stock_trading_app
 Stock Trading App
 
-- Kamran Niknia
 - Overview/description of the project
     - This is a stock trading app. You can search stock symbols and pretend to buy and sell shares.
 - Details on how to use it or what functionality is offered
